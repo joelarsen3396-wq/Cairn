@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cairn — Whose land am I on?</title>
+<meta name="description" content="Learn whose ancestral land you're standing on, what it is today, and how to tread with respect.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stone:#EAE7DE;      /* background: granite mist */
+    --ink:#232B26;        /* text: fir shadow */
+    --spruce:#33594A;     /* primary: deep spruce */
+    --river:#48708C;      /* links: klamath blue */
+    --ember:#A65E2E;      /* rare highlight: campfire ember */
+    --card:#F4F2EB;
+    --line:#C9C4B6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--stone);
+    color:var(--ink);
+    font-family:'Atkinson Hyperlegible',system-ui,sans-serif;
+    font-size:17px;line-height:1.55;
+    min-height:100svh;
+    display:flex;flex-direction:column;align-items:center;
+    padding:max(24px,env(safe-area-inset-top)) 20px max(28px,env(safe-area-inset-bottom));
+  }
+  main{width:100%;max-width:480px;display:flex;flex-direction:column;align-items:center}
+
+  /* ---------- The cairn mark ---------- */
+  .cairn-mark{margin:8px 0 4px}
+  .cairn-mark .rock{fill:var(--spruce);opacity:.92}
+  .cairn-mark.loading .rock{animation:breathe 1.3s ease-in-out infinite}
+  .cairn-mark.loading .rock:nth-child(2){animation-delay:.18s}
+  .cairn-mark.loading .rock:nth-child(3){animation-delay:.36s}
+  @keyframes breathe{0%,100%{opacity:.45}50%{opacity:.95}}
+  @media (prefers-reduced-motion:reduce){
+    .cairn-mark.loading .rock{animation:none;opacity:.7}
+  }
+
+  h1{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:700;font-size:2.1rem;letter-spacing:-.01em;
+  }
+  .tagline{color:#5A6159;text-align:center;margin:6px 0 26px;max-width:34ch}
+
+  /* ---------- The button ---------- */
+  #locate{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:600;font-size:1.15rem;
+    color:var(--card);background:var(--spruce);
+    border:none;border-radius:999px;
+    padding:16px 34px;cursor:pointer;
+    box-shadow:0 2px 0 #24413600, inset 0 -3px 0 rgba(0,0,0,.18);
+    transition:transform .1s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #locate:active{transform:scale(.97)}
+  #locate:focus-visible{outline:3px solid var(--ember);outline-offset:3px}
+  #locate:disabled{opacity:.6;cursor:default}
+  #status{min-height:1.4em;margin-top:14px;color:#5A6159;text-align:center;font-size:.95rem}
+
+  /* ---------- Result stones ---------- */
+  #results{width:100%;display:none;flex-direction:column;gap:14px;margin-top:26px}
+  #results.show{display:flex}
+  .stone-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    padding:20px 22px;
+  }
+  /* each stone in the stack has its own irregular shape */
+  .stone-card:nth-child(1){border-radius:26px 30px 22px 28px}
+  .stone-card:nth-child(2){border-radius:22px 26px 30px 24px}
+  .stone-card:nth-child(3){border-radius:30px 22px 26px 30px}
+  .eyebrow{
+    font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ember);margin-bottom:6px;
+  }
+  .stone-card h2{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:600;font-size:1.35rem;line-height:1.25;margin-bottom:8px;
+  }
+  .stone-card p{margin-bottom:10px}
+  .stone-card p:last-child{margin-bottom:0}
+  .stone-card a{color:var(--river);text-decoration-thickness:1px;text-underline-offset:2px}
+  .territory-list{list-style:none}
+  .territory-list li{margin-bottom:6px}
+  .territory-list li:last-child{margin-bottom:0}
+  .unit-name{color:#5A6159;font-size:.95rem}
+
+  footer{
+    margin-top:34px;max-width:480px;
+    font-size:.8rem;line-height:1.5;color:#6B7268;text-align:center;
+  }
+  footer a{color:var(--river)}
+  .error{color:#8C3B2E;text-align:center;margin-top:14px;display:none;max-width:38ch}
+</style>
+</head>
+<body>
+<main>
+  <svg class="cairn-mark" id="cairnMark" width="64" height="72" viewBox="0 0 64 72" aria-hidden="true">
+    <ellipse class="rock" cx="32" cy="62" rx="26" ry="9"/>
+    <ellipse class="rock" cx="31" cy="44" rx="19" ry="8"/>
+    <ellipse class="rock" cx="33" cy="29" rx="12" ry="7"/>
+  </svg>
+  <h1>Cairn</h1>
+  <p class="tagline">Whose land am I on, and how do I honor it?</p>
+
+  <button id="locate">Where am I?</button>
+  <p id="status" role="status"></p>
+  <p class="error" id="error"></p>
+
+  <section id="results" aria-live="polite">
+    <div class="stone-card">
+      <p class="eyebrow">Whose land</p>
+      <h2 id="territoryHeading">Ancestral territory</h2>
+      <ul class="territory-list" id="territoryList"></ul>
+    </div>
+    <div class="stone-card">
+      <p class="eyebrow">Today</p>
+      <h2 id="unitHeading">This land now</h2>
+      <p class="unit-name" id="unitName"></p>
+    </div>
+    <div class="stone-card">
+      <p class="eyebrow">How to tread here</p>
+      <h2 id="treadHeading"></h2>
+      <p id="treadText"></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Territory data from <a href="https://native-land.ca" target="_blank" rel="noopener">Native Land Digital</a>, which does not represent official or legal boundaries of any Indigenous nations. Land status from the USGS <a href="https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview" target="_blank" rel="noopener">Protected Areas Database (PAD-US)</a>. Always confirm rules locally.</p>
+</footer>
+
+<script>
+/* ============================================================
+   CAIRN v1
+   1) Get GPS position
+   2) Ask Native Land Digital whose ancestral territory this is
+   3) Ask PAD-US what the land is today
+   4) Show the matching "how to tread here" guidance
+   ============================================================ */
+
+// ↓↓↓ PASTE YOUR NATIVE LAND API KEY BETWEEN THE QUOTES ↓↓↓
+const NATIVE_LAND_KEY = "PASTE_YOUR_KEY_HERE";
+// ↑↑↑ THAT'S THE ONLY LINE YOU NEED TO EDIT ↑↑↑
+
+const PADUS_URL =
+  "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Manager_Name/FeatureServer/0/query";
+
+const BLURBS = {
+  tribal: {
+    title: "Tribal land",
+    text: "You're a guest on sovereign land, held and cared for by its people since time immemorial. Rules here aren't bureaucracy — they're an invitation to respect. Check the tribe's website before visiting; some areas welcome visitors, others are sacred and closed. If you're welcomed in, tread gently, buy local if you can, and leave the land better than you found it."
+  },
+  forest: {
+    title: "National Forest",
+    text: "This land belongs to everyone, which means it's held in trust for you — and for everyone after you. Forests like this are working landscapes: recreation, watershed, habitat, and yes, logging, all share space here. Campfires are the big one: check current fire restrictions before you strike a match, especially in the West. Stay on trail, pack out everything, and remember that \"multiple use\" includes the animals who live here full-time."
+  },
+  park: {
+    title: "National Park",
+    text: "You're in one of the most protected places in America — a promise made generations ago to keep this land unimpaired. The rules are stricter here because the stakes are higher: pets stay on pavement, drones stay grounded, and everything natural stays where it is, down to the pinecones. Crowds are part of park life, so your patience is a gift to everyone. Come at dawn if you can. The land is different when it's quiet."
+  },
+  wilderness: {
+    title: "Wilderness Area",
+    text: "This is land America chose to leave alone — no roads, no machines, no permanent anything. Wilderness is the deepest promise we make to a place. That means you carry everything in and everything out, groups stay small, and even bikes and drones are off-limits. It's harder out here on purpose. The reward is a kind of quiet that doesn't exist anywhere else."
+  },
+  blm: {
+    title: "BLM land",
+    text: "This is some of the most open, least-managed public land there is — vast, often empty, and largely yours to roam. That freedom is the point, and it survives only if visitors self-govern. Dispersed camping is usually allowed, but the desert and sagebrush country heal slowly: a tire track or fire scar can last decades. Camp on durable ground, respect existing fire rings, and leave gates as you found them."
+  },
+  state: {
+    title: "State land",
+    text: "State parks and forests are the locals' land — often quieter than the famous places, and often where the community actually goes. Rules vary a lot from state to state, so the kiosk at the trailhead is your friend. Your entry fee usually funds the place directly, so pay it gladly. These are the parks that teach kids to love the outdoors."
+  },
+  private: {
+    title: "Private land",
+    text: "Someone holds this land, and passing through is a privilege, not a right. Trails sometimes cross private parcels thanks to the generosity of owners — a handshake agreement that one bad visitor can end. Stay on the easement, leave gates as you found them, and if you meet the owner, a wave and a thank-you go further than you'd think."
+  }
+};
+
+const $ = (id) => document.getElementById(id);
+
+$("locate").addEventListener("click", () => {
+  hideError();
+  $("results").classList.remove("show");
+  setLoading(true, "Finding you\u2026");
+
+  if (!("geolocation" in navigator)) {
+    fail("This browser can't share your location. Try opening Cairn in Safari or Chrome.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => lookUp(pos.coords.latitude, pos.coords.longitude),
+    (err) => {
+      if (err.code === err.PERMISSION_DENIED) {
+        fail("Location is blocked. Allow location for this site in your browser settings, then try again.");
+      } else {
+        fail("Couldn't get a GPS fix. Move to open sky and try again.");
+      }
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+  );
+});
+
+async function lookUp(lat, lng) {
+  setLoading(true, "Reading the land\u2026");
+
+  const [territories, padus] = await Promise.allSettled([
+    fetchTerritories(lat, lng),
+    fetchPadus(lat, lng)
+  ]);
+
+  setLoading(false, "");
+
+  const gotTerritories = territories.status === "fulfilled";
+  const gotPadus = padus.status === "fulfilled";
+
+  if (!gotTerritories && !gotPadus) {
+    fail("Couldn't reach the land databases. Check your signal and try again.");
+    return;
+  }
+
+  renderTerritories(gotTerritories ? territories.value : null);
+  renderLandStatus(gotPadus ? padus.value : null);
+  $("results").classList.add("show");
+}
+
+async function fetchTerritories(lat, lng) {
+  const url =
+    "https://native-land.ca/api/index.php?maps=territories" +
+    "&position=" + lat + "," + lng +
+    "&key=" + encodeURIComponent(NATIVE_LAND_KEY);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("native-land " + res.status);
+  return res.json();
+}
+
+async function fetchPadus(lat, lng) {
+  const params = new URLSearchParams({
+    f: "json",
+    geometry: lng + "," + lat,
+    geometryType: "esriGeometryPoint",
+    inSR: "4326",
+    spatialRel: "esriSpatialRelIntersects",
+    outFields: "*",
+    returnGeometry: "false"
+  });
+  const res = await fetch(PADUS_URL + "?" + params.toString());
+  if (!res.ok) throw new Error("padus " + res.status);
+  const data = await res.json();
+  if (data.error) throw new Error("padus error");
+  return data;
+}
+
+function renderTerritories(data) {
+  const list = $("territoryList");
+  list.innerHTML = "";
+
+  const features = Array.isArray(data) ? data : (data && data.features) || [];
+  if (!data) {
+    $("territoryHeading").textContent = "Ancestral territory";
+    list.innerHTML = "<li>Couldn't reach Native Land Digital right now. Try again in a moment, or look this spot up at native-land.ca.</li>";
+    return;
+  }
+  if (features.length === 0) {
+    $("territoryHeading").textContent = "Ancestral territory";
+    list.innerHTML = "<li>No mapped territories at this exact point — Native Land's map is always growing. You can explore nearby nations at native-land.ca.</li>";
+    return;
+  }
+
+  $("territoryHeading").textContent =
+    features.length === 1 ? "You are on the land of" : "You are on the lands of";
+
+  for (const f of features) {
+    const props = f.properties || {};
+    const name = props.Name || "Unknown territory";
+    const link = props.description || "";
+    const li = document.createElement("li");
+    if (link && /^https?:\/\//.test(link)) {
+      const a = document.createElement("a");
+      a.href = link;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = name;
+      li.appendChild(a);
+    } else {
+      li.textContent = name;
+    }
+    list.appendChild(li);
+  }
+}
+
+function renderLandStatus(data) {
+  const features = (data && data.features) || [];
+  const bucketOf = (attrs) => {
+    const a = attrs || {};
+    const unit = String(a.Unit_Nm || a.unit_nm || "");
+    const mangName = String(a.Mang_Name || a.mang_name || "");
+    const mangType = String(a.Mang_Type || a.mang_type || "");
+    const desTp = String(a.Des_Tp || a.des_tp || "");
+    if (desTp === "WA" || /wilderness/i.test(unit)) return "wilderness";
+    if (mangType === "TRIB" || mangName === "BIA") return "tribal";
+    if (mangName === "NPS") return "park";
+    if (mangName === "USFS") return "forest";
+    if (mangName === "BLM") return "blm";
+    if (mangType === "STAT" || mangType === "LOC") return "state";
+    return null;
+  };
+
+  // If several land layers overlap, honor the most protective one.
+  const priority = ["wilderness", "park", "tribal", "forest", "blm", "state"];
+  let best = null;
+  let bestUnit = "";
+  for (const f of features) {
+    const b = bucketOf(f.attributes);
+    if (b && (best === null || priority.indexOf(b) < priority.indexOf(best))) {
+      best = b;
+      bestUnit = String((f.attributes && (f.attributes.Unit_Nm || f.attributes.unit_nm)) || "");
+    }
+  }
+
+  if (!data) {
+    $("unitHeading").textContent = "This land now";
+    $("unitName").textContent = "Couldn't reach the public-lands database right now — guidance below is general.";
+    applyBlurb("private");
+    return;
+  }
+
+  if (!best) {
+    $("unitHeading").textContent = "Likely private or unlisted land";
+    $("unitName").textContent = "This point isn't in the protected-areas inventory, which usually means private land.";
+    applyBlurb("private");
+    return;
+  }
+
+  $("unitHeading").textContent = BLURBS[best].title;
+  $("unitName").textContent = bestUnit ? bestUnit : "";
+  applyBlurb(best);
+}
+
+function applyBlurb(key) {
+  $("treadHeading").textContent = BLURBS[key].title;
+  $("treadText").textContent = BLURBS[key].text;
+}
+
+function setLoading(on, msg) {
+  $("locate").disabled = on;
+  $("status").textContent = msg;
+  $("cairnMark").classList.toggle("loading", on);
+}
+
+function fail(msg) {
+  setLoading(false, "");
+  const e = $("error");
+  e.textContent = msg;
+  e.style.display = "block";
+}
+
+function hideError() {
+  $("error").style.display = "none";
+}
+</script>
+</body>
+</html>
