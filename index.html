@@ -102,6 +102,18 @@
   .lang-line{display:none;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:.92rem;color:#5A6159}
   .lang-line.show{display:block}
 
+  #shareBtn{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:600;font-size:1rem;
+    color:var(--spruce);background:transparent;
+    border:2px solid var(--spruce);border-radius:999px;
+    padding:12px 26px;cursor:pointer;
+    align-self:center;margin-top:4px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #shareBtn:active{transform:scale(.97)}
+  #shareBtn:focus-visible{outline:3px solid #A65E2E;outline-offset:3px}
+
   footer{
     margin-top:34px;max-width:480px;
     font-size:.8rem;line-height:1.5;color:#6B7268;text-align:center;
@@ -152,6 +164,7 @@
       <h2 id="treadHeading"></h2>
       <p id="treadText"></p>
     </div>
+    <button id="shareBtn">Share this ground</button>
   </section>
 </main>
 
@@ -203,6 +216,24 @@ const BLURBS = {
 };
 
 const $ = (id) => document.getElementById(id);
+let lastTerritoryNames = [];
+
+$("shareBtn").addEventListener("click", async () => {
+  const where = lastTerritoryNames.length
+    ? "I'm standing on " + lastTerritoryNames.join(", ") + " land."
+    : "I just learned whose land I'm standing on.";
+  const text = where + " Find out whose land you're on: https://cairnapp.org";
+  if (navigator.share) {
+    try { await navigator.share({ text: text }); } catch (e) {}
+  } else {
+    try {
+      await navigator.clipboard.writeText(text);
+      $("status").textContent = "Copied. Paste it anywhere.";
+    } catch (e) {
+      $("status").textContent = text;
+    }
+  }
+});
 
 $("locate").addEventListener("click", () => {
   hideError();
@@ -317,6 +348,9 @@ function renderTerritories(data) {
   const isLang = (f) => /\/languages\//.test((f.properties || {}).description || "");
   const features = all.filter((f) => !isLang(f));
   const languages = all.filter(isLang);
+  lastTerritoryNames = features
+    .map((f) => (f.properties || {}).Name)
+    .filter(Boolean);
 
   if (!data) {
     $("territoryHeading").textContent = "Ancestral territory";
