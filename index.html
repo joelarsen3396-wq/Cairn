@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Cairn — Whose land am I on?</title>
 <meta name="description" content="Learn whose ancestral land you're standing on, what it is today, and how to tread with respect.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#EAE7DE">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -33,7 +39,9 @@
 
   /* ---------- The cairn mark ---------- */
   .cairn-mark{margin:8px 0 4px}
-  .cairn-mark .rock{fill:var(--spruce);opacity:.92}
+  .cairn-mark .rock{fill:#B0653A;opacity:.95}
+  .cairn-mark .rock:nth-child(1){fill:#A65E2E}
+  .cairn-mark .rock:nth-child(3){fill:#BC7047}
   .cairn-mark.loading .rock{animation:breathe 1.3s ease-in-out infinite}
   .cairn-mark.loading .rock:nth-child(2){animation-delay:.18s}
   .cairn-mark.loading .rock:nth-child(3){animation-delay:.36s}
@@ -78,7 +86,7 @@
   .stone-card:nth-child(3){border-radius:30px 22px 26px 30px}
   .eyebrow{
     font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--ember);margin-bottom:6px;
+    color:var(--spruce);margin-bottom:6px;
   }
   .stone-card h2{
     font-family:'Bricolage Grotesque',sans-serif;
