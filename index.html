@@ -164,6 +164,11 @@
       <h2 id="treadHeading"></h2>
       <p id="treadText"></p>
     </div>
+    <div class="stone-card" id="trailsCard" style="display:none">
+      <p class="eyebrow">Nearby</p>
+      <h2>Trails near you</h2>
+      <ul class="territory-list" id="trailsList"></ul>
+    </div>
     <button id="shareBtn">Share this ground</button>
   </section>
 </main>
@@ -281,6 +286,62 @@ async function lookUp(lat, lng) {
   renderTerritories(gotTerritories ? territories.value : null);
   renderLandStatus(gotPadus ? padus.value : null);
   $("results").classList.add("show");
+  loadTrails(lat, lng);
+}
+
+async function loadTrails(lat, lng) {
+  const card = $("trailsCard");
+  const list = $("trailsList");
+  card.style.display = "none";
+  list.innerHTML = "";
+  try {
+    const query =
+      '[out:json][timeout:12];way(around:8000,' + lat + ',' + lng + ')' +
+      '["highway"~"^(path|footway)$"]["name"];out tags center 40;';
+    const res = await fetch(
+      "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    const seen = {};
+    const trails = [];
+    for (const el of data.elements || []) {
+      const name = el.tags && el.tags.name;
+      if (!name || seen[name] || !el.center) continue;
+      seen[name] = true;
+      trails.push({
+        name: name,
+        lat: el.center.lat,
+        lng: el.center.lon,
+        dist: distanceMiles(lat, lng, el.center.lat, el.center.lon)
+      });
+    }
+    if (trails.length === 0) return;
+    trails.sort((a, b) => a.dist - b.dist);
+    for (const t of trails.slice(0, 5)) {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = "https://www.google.com/maps/search/?api=1&query=" +
+        t.lat.toFixed(5) + "%2C" + t.lng.toFixed(5);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = t.name;
+      li.appendChild(a);
+      li.append(" \u2014 " + (t.dist < 0.95 ? t.dist.toFixed(1) : Math.round(t.dist)) + " mi");
+      list.appendChild(li);
+    }
+    card.style.display = "block";
+  } catch (e) {}
+}
+
+function distanceMiles(lat1, lng1, lat2, lng2) {
+  const R = 3958.8;
+  const toRad = (d) => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 async function fetchTerritories(lat, lng) {
