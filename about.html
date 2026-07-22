@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>About Cairn</title>
+<meta name="description" content="The story behind Cairn: whose land am I on, and how do I honor it?">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#EAE7DE">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stone:#EAE7DE;
+    --ink:#232B26;
+    --spruce:#33594A;
+    --river:#48708C;
+    --card:#F4F2EB;
+    --line:#C9C4B6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--stone);
+    color:var(--ink);
+    font-family:'Atkinson Hyperlegible',system-ui,sans-serif;
+    font-size:17px;line-height:1.6;
+    min-height:100svh;
+    display:flex;flex-direction:column;align-items:center;
+    padding:max(24px,env(safe-area-inset-top)) 20px max(28px,env(safe-area-inset-bottom));
+  }
+  main{width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center}
+  .cairn-mark{margin:8px 0 4px}
+  .cairn-mark .rock{opacity:.95}
+  h1{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:700;font-size:1.9rem;letter-spacing:-.01em;
+    margin-bottom:22px;
+  }
+  article{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:26px 30px 22px 28px;
+    padding:26px 24px;
+    width:100%;
+  }
+  article p{margin-bottom:16px}
+  article p:last-of-type{margin-bottom:0}
+  article em{font-style:italic}
+  article a{color:var(--river);text-decoration-thickness:1px;text-underline-offset:2px}
+  .signoff{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:600;color:var(--spruce);
+    margin-top:20px;
+  }
+  .back-link{
+    display:inline-block;margin-top:26px;
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:600;font-size:1rem;
+    color:var(--card);background:#A65E2E;
+    border-radius:999px;padding:12px 28px;
+    text-decoration:none;
+  }
+  .back-link:focus-visible{outline:3px solid var(--spruce);outline-offset:3px}
+</style>
+</head>
+<body>
+<main>
+  <svg class="cairn-mark" width="52" height="59" viewBox="0 0 64 72" aria-hidden="true">
+    <ellipse class="rock" cx="32" cy="62" rx="26" ry="9" fill="#A65E2E"/>
+    <ellipse class="rock" cx="31" cy="44" rx="19" ry="8" fill="#B0653A"/>
+    <ellipse class="rock" cx="33" cy="29" rx="12" ry="7" fill="#BC7047"/>
+  </svg>
+  <h1>About Cairn</h1>
+
+  <article>
+    <p>Cairn started in 2019. Katie was getting ready to thru-hike the Pacific Crest Trail, inspired like so many by <em>Wild</em>, and somewhere in all that preparation a question stuck with her that no app could answer. Not what mountain is that. Whose land am I walking through, and how do I honor it?</p>
+
+    <p>Plenty of apps name peaks. This one names something older.</p>
+
+    <p>Stand anywhere and tap the button. Cairn tells you whose ancestral homeland you're on, using Native Land Digital's Indigenous-led map. It tells you the languages of that land. It tells you what the land is today (forest, park, wilderness, reservation, someone's back forty) and how to tread each kind with respect. It keeps an eye on the sky for heat, fire, flood, and storms. And it shows you the trails within reach, because knowing a place and walking it belong together.</p>
+
+    <p>We built it for the inspired but intimidated dreamer. The person standing at a trailhead feeling like the mountain knows more than they do. It does. Cairn just helps you listen.</p>
+
+    <p>A cairn is a stack of stones that says others have passed this way, and the path continues. The ones I grew up with were red rock sandstone, marking routes through the canyons of Southern Utah. That's why our stones are the color they are.</p>
+
+    <p>Some gratitude, and some honesty. Territory and language data come from <a href="https://native-land.ca" target="_blank" rel="noopener">Native Land Digital</a>, an Indigenous-led nonprofit whose work makes this app possible. Their map does not represent the official or legal boundaries of any Indigenous nation, and neither do we. Land status comes from the USGS Protected Areas Database. Weather and warnings come from the National Weather Service. Trails come from OpenStreetMap's community. Always confirm rules and conditions locally. The land's own stewards know it best.</p>
+
+    <p>Cairn is free, has no ads, and collects nothing about you. Your location goes out to answer your question and is never stored. This is a gift from our family to anyone who loves the land enough to ask whose it is.</p>
+
+    <p class="signoff">Joseph &amp; Katie, Albany, Oregon</p>
+  </article>
+
+  <a class="back-link" href="index.html">Back to Cairn</a>
+</main>
+</body>
+</html>
