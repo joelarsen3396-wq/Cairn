@@ -335,7 +335,18 @@ function renderLandStatus(data) {
   }
 
   $("unitHeading").textContent = BLURBS[best].title;
-  $("unitName").textContent = bestUnit ? bestUnit : "";
+  const unitEl = $("unitName");
+  unitEl.textContent = "";
+  if (bestUnit) {
+    unitEl.append(bestUnit + " \u2014 ");
+    const a = document.createElement("a");
+    a.href = "https://www.google.com/search?q=" +
+      encodeURIComponent(bestUnit + " official site current conditions alerts");
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "check current conditions";
+    unitEl.appendChild(a);
+  }
   applyBlurb(best);
 }
 
