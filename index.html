@@ -98,6 +98,16 @@
   }
   footer a{color:var(--river)}
   .error{color:#8C3B2E;text-align:center;margin-top:14px;display:none;max-width:38ch}
+
+  /* ---------- Fire weather banner ---------- */
+  .fire-banner{
+    display:none;width:100%;
+    background:#F6E3D3;border:1px solid #C97B3D;
+    border-radius:18px;padding:14px 18px;
+    color:#7A3B12;font-weight:700;
+  }
+  .fire-banner.show{display:block}
+  .fire-banner span{font-weight:400;display:block;margin-top:4px}
 </style>
 </head>
 <body>
@@ -115,6 +125,7 @@
   <p class="error" id="error"></p>
 
   <section id="results" aria-live="polite">
+    <div class="fire-banner" id="fireBanner"></div>
     <div class="stone-card">
       <p class="eyebrow">Whose land</p>
       <h2 id="territoryHeading">Ancestral territory</h2>
@@ -208,9 +219,10 @@ $("locate").addEventListener("click", () => {
 async function lookUp(lat, lng) {
   setLoading(true, "Reading the land\u2026");
 
-  const [territories, padus] = await Promise.allSettled([
+  const [territories, padus, fire] = await Promise.allSettled([
     fetchTerritories(lat, lng),
-    fetchPadus(lat, lng)
+    fetchPadus(lat, lng),
+    fetchFireAlerts(lat, lng)
   ]);
 
   setLoading(false, "");
@@ -223,6 +235,7 @@ async function lookUp(lat, lng) {
     return;
   }
 
+  renderFireBanner(fire.status === "fulfilled" ? fire.value : null);
   renderTerritories(gotTerritories ? territories.value : null);
   renderLandStatus(gotPadus ? padus.value : null);
   $("results").classList.add("show");
@@ -234,6 +247,35 @@ async function fetchTerritories(lat, lng) {
   const res = await fetch(url);
   if (!res.ok) throw new Error("native-land " + res.status);
   return res.json();
+}
+
+async function fetchFireAlerts(lat, lng) {
+  const url = "https://api.weather.gov/alerts/active?point=" +
+    lat.toFixed(4) + "," + lng.toFixed(4);
+  const res = await fetch(url, { headers: { "Accept": "application/geo+json" } });
+  if (!res.ok) throw new Error("nws " + res.status);
+  return res.json();
+}
+
+function renderFireBanner(data) {
+  const banner = $("fireBanner");
+  banner.classList.remove("show");
+  banner.textContent = "";
+  if (!data || !Array.isArray(data.features)) return;
+
+  const fireEvents = ["Red Flag Warning", "Fire Weather Watch", "Extreme Fire Danger"];
+  const hit = data.features.find(f =>
+    f.properties && fireEvents.includes(f.properties.event));
+  if (!hit) return;
+
+  const eventName = hit.properties.event;
+  banner.append("\u26A0 " + eventName + " in effect here");
+  const note = document.createElement("span");
+  note.textContent = eventName === "Fire Weather Watch"
+    ? "Dangerous fire conditions are possible. Skip the campfire and check local restrictions before heading out."
+    : "Critical fire conditions right now. No fires of any kind, and check for closures before heading out.";
+  banner.appendChild(note);
+  banner.classList.add("show");
 }
 
 async function fetchPadus(lat, lng) {
