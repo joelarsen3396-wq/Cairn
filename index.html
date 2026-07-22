@@ -99,6 +99,8 @@
   .territory-list li{margin-bottom:6px}
   .territory-list li:last-child{margin-bottom:0}
   .unit-name{color:#5A6159;font-size:.95rem}
+  .lang-line{display:none;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:.92rem;color:#5A6159}
+  .lang-line.show{display:block}
 
   footer{
     margin-top:34px;max-width:480px;
@@ -138,6 +140,7 @@
       <p class="eyebrow">Whose land</p>
       <h2 id="territoryHeading">Ancestral territory</h2>
       <ul class="territory-list" id="territoryList"></ul>
+      <p class="lang-line" id="languageLine"></p>
     </div>
     <div class="stone-card">
       <p class="eyebrow">Today</p>
@@ -306,8 +309,15 @@ async function fetchPadus(lat, lng) {
 function renderTerritories(data) {
   const list = $("territoryList");
   list.innerHTML = "";
+  const langLine = $("languageLine");
+  langLine.classList.remove("show");
+  langLine.textContent = "";
 
-  const features = Array.isArray(data) ? data : (data && data.features) || [];
+  const all = Array.isArray(data) ? data : (data && data.features) || [];
+  const isLang = (f) => /\/languages\//.test((f.properties || {}).description || "");
+  const features = all.filter((f) => !isLang(f));
+  const languages = all.filter(isLang);
+
   if (!data) {
     $("territoryHeading").textContent = "Ancestral territory";
     list.innerHTML = "<li>Couldn't reach Native Land Digital right now. Try again in a moment, or look this spot up at native-land.ca.</li>";
@@ -316,28 +326,48 @@ function renderTerritories(data) {
   if (features.length === 0) {
     $("territoryHeading").textContent = "Ancestral territory";
     list.innerHTML = "<li>No mapped territories at this exact point — Native Land's map is always growing. You can explore nearby nations at native-land.ca.</li>";
-    return;
+  } else {
+    $("territoryHeading").textContent =
+      features.length === 1 ? "You are on the land of" : "You are on the lands of";
+
+    for (const f of features) {
+      const props = f.properties || {};
+      const name = props.Name || "Unknown territory";
+      const link = props.description || "";
+      const li = document.createElement("li");
+      if (link && /^https?:\/\//.test(link)) {
+        const a = document.createElement("a");
+        a.href = link;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = name;
+        li.appendChild(a);
+      } else {
+        li.textContent = name;
+      }
+      list.appendChild(li);
+    }
   }
 
-  $("territoryHeading").textContent =
-    features.length === 1 ? "You are on the land of" : "You are on the lands of";
-
-  for (const f of features) {
-    const props = f.properties || {};
-    const name = props.Name || "Unknown territory";
-    const link = props.description || "";
-    const li = document.createElement("li");
-    if (link && /^https?:\/\//.test(link)) {
-      const a = document.createElement("a");
-      a.href = link;
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.textContent = name;
-      li.appendChild(a);
-    } else {
-      li.textContent = name;
-    }
-    list.appendChild(li);
+  if (languages.length > 0) {
+    langLine.append("Languages of this land: ");
+    languages.forEach((f, i) => {
+      const props = f.properties || {};
+      const name = props.Name || "Unknown";
+      const link = props.description || "";
+      if (i > 0) langLine.append(", ");
+      if (link && /^https?:\/\//.test(link)) {
+        const a = document.createElement("a");
+        a.href = link;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = name;
+        langLine.appendChild(a);
+      } else {
+        langLine.append(name);
+      }
+    });
+    langLine.classList.add("show");
   }
 }
 
