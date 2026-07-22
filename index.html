@@ -27,6 +27,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
   body{
+    position:relative;
     background:var(--stone);
     color:var(--ink);
     font-family:'Atkinson Hyperlegible',system-ui,sans-serif;
@@ -79,11 +80,9 @@
     background:var(--card);
     border:1px solid var(--line);
     padding:20px 22px;
+    border-radius:26px 30px 22px 28px;
   }
-  /* each stone in the stack has its own irregular shape */
-  .stone-card:nth-child(1){border-radius:26px 30px 22px 28px}
-  .stone-card:nth-child(2){border-radius:22px 26px 30px 24px}
-  .stone-card:nth-child(3){border-radius:30px 22px 26px 30px}
+  .stone-card:nth-of-type(even){border-radius:22px 26px 30px 24px}
   .eyebrow{
     font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
     color:var(--spruce);margin-bottom:6px;
@@ -130,10 +129,13 @@
   }
   .fire-banner.show{display:block}
   .fire-banner span{font-weight:400;display:block;margin-top:4px}
+  .weather-line{display:none;position:absolute;top:max(14px,env(safe-area-inset-top));right:16px;color:#5A6159;font-size:.82rem;max-width:46%;text-align:right}
+  .weather-line.show{display:block}
 </style>
 </head>
 <body>
 <main>
+  <p class="weather-line" id="weatherLine"></p>
   <svg class="cairn-mark" id="cairnMark" width="64" height="72" viewBox="0 0 64 72" aria-hidden="true">
     <ellipse class="rock" cx="32" cy="62" rx="26" ry="9"/>
     <ellipse class="rock" cx="31" cy="44" rx="19" ry="8"/>
@@ -154,6 +156,11 @@
       <ul class="territory-list" id="territoryList"></ul>
       <p class="lang-line" id="languageLine"></p>
     </div>
+    <div class="stone-card" id="trailsCard" style="display:none">
+      <p class="eyebrow">Nearby</p>
+      <h2>Trails near you</h2>
+      <ul class="territory-list" id="trailsList"></ul>
+    </div>
     <div class="stone-card">
       <p class="eyebrow">Today</p>
       <h2 id="unitHeading">This land now</h2>
@@ -163,11 +170,6 @@
       <p class="eyebrow">How to tread here</p>
       <h2 id="treadHeading"></h2>
       <p id="treadText"></p>
-    </div>
-    <div class="stone-card" id="trailsCard" style="display:none">
-      <p class="eyebrow">Nearby</p>
-      <h2>Trails near you</h2>
-      <ul class="territory-list" id="trailsList"></ul>
     </div>
     <button id="shareBtn">Share this ground</button>
   </section>
@@ -287,6 +289,30 @@ async function lookUp(lat, lng) {
   renderLandStatus(gotPadus ? padus.value : null);
   $("results").classList.add("show");
   loadTrails(lat, lng);
+  loadWeather(lat, lng);
+}
+
+async function loadWeather(lat, lng) {
+  const line = $("weatherLine");
+  line.classList.remove("show");
+  line.textContent = "";
+  try {
+    const ptRes = await fetch(
+      "https://api.weather.gov/points/" + lat.toFixed(4) + "," + lng.toFixed(4)
+    );
+    if (!ptRes.ok) return;
+    const pt = await ptRes.json();
+    const fcUrl = pt.properties && pt.properties.forecast;
+    if (!fcUrl) return;
+    const fcRes = await fetch(fcUrl);
+    if (!fcRes.ok) return;
+    const fc = await fcRes.json();
+    const p = fc.properties && fc.properties.periods && fc.properties.periods[0];
+    if (!p) return;
+    line.textContent = p.name + ": " + p.shortForecast + ", " +
+      p.temperature + "\u00B0" + p.temperatureUnit;
+    line.classList.add("show");
+  } catch (e) {}
 }
 
 async function loadTrails(lat, lng) {
